@@ -60,7 +60,7 @@ ReSIDfp::ReSIDfp(sidbuilder *builder) :
     sidemu(builder),
     m_sid(*(new reSIDfp::SID))
 {
-    m_buffer = new short[OUTPUTBUFFERSIZE];
+    m_buffer = new int16_t[OUTPUTBUFFERSIZE*4];
     reset(0);
 }
 
@@ -104,7 +104,7 @@ void ReSIDfp::clock()
 {
     const event_clock_t cycles = eventScheduler->getTime(EVENT_CLOCK_PHI1) - m_accessClk;
     m_accessClk += cycles;
-    m_bufferpos += m_sid.clock(cycles, m_buffer+m_bufferpos);
+    m_bufferpos += m_sid.clock(cycles, m_buffer+(m_bufferpos<<2));
 }
 
 void ReSIDfp::filter(bool enable)
@@ -167,6 +167,23 @@ void ReSIDfp::model(SidConfig::sid_model_t model, bool digiboost)
 
     m_sid.setChipModel(chipModel);
     m_status = true;
+}
+
+void ReSIDfp::GetVolumes(uint8_t &a, uint8_t &b, uint8_t &c) const
+{
+   float _a = 0.0f;
+   float _b = 0.0f;
+   float _c = 0.0f;
+
+   m_sid.volumes (_a, _b, _c);
+
+   _a *= 0x8000;
+   _b *= 0x8000;
+   _c *= 0x8000;
+
+   if (_a < 0.0) a = 0; else if (_a > 255.0) a = 255; else a = _a;
+   if (_b < 0.0) b = 0; else if (_b > 255.0) b = 255; else b = _b;
+   if (_c < 0.0) c = 0; else if (_c > 255.0) c = 255; else c = _c;
 }
 
 }

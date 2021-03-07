@@ -172,6 +172,20 @@ bool Player::load(SidTune *tune)
     return true;
 }
 
+bool Player::getSidStatus(unsigned int sidNum, uint8_t& gatestoggle, uint8_t& syncstoggle, uint8_t& teststoggle, uint8_t **registers, uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c)
+{
+    sidemu *s = m_mixer.getSid(sidNum);
+    if (s == nullptr)
+    {
+        *registers = nullptr;
+        return false;
+    }
+    s->getToggles(gatestoggle, syncstoggle, teststoggle);
+    *registers = s->lastpoke;
+    s->GetVolumes(volume_a, volume_b, volume_c);
+    return true;
+}
+
 void Player::mute(unsigned int sidNum, unsigned int voice, bool enable)
 {
     sidemu *s = m_mixer.getSid(sidNum);
@@ -188,7 +202,7 @@ void Player::run(unsigned int events)
         m_c64.clock();
 }
 
-uint_least32_t Player::play(short *buffer, uint_least32_t count)
+uint_least32_t Player::play(int16_t *buffer, uint_least32_t count, std::vector<int16_t*> *rawBuffers)
 {
     // Make sure a tune is loaded
     if (m_tune == nullptr)
@@ -200,7 +214,7 @@ uint_least32_t Player::play(short *buffer, uint_least32_t count)
 
     if (m_isPlaying == PLAYING)
     {
-        m_mixer.begin(buffer, count);
+        m_mixer.begin(buffer, count, rawBuffers);
 
         try
         {
@@ -311,9 +325,9 @@ bool Player::config(const SidConfig &cfg, bool force)
             sidCreate(cfg.sidEmulation, cfg.defaultSidModel, cfg.digiBoost, cfg.forceSidModel, addresses);
 
             // Determine clock speed
-            const c64::model_t model = c64model(cfg.defaultC64Model, cfg.forceC64Model);
+            m_model = c64model(cfg.defaultC64Model, cfg.forceC64Model);
 
-            m_c64.setModel(model);
+            m_c64.setModel(m_model);
             m_c64.setCiaModel(cfg.ciaModel);
 
             sidParams(m_c64.getMainCpuSpeed(), cfg.frequency, cfg.samplingMethod, cfg.fastSampling);
@@ -434,7 +448,7 @@ c64::model_t Player::c64model(SidConfig::c64_model_t defaultModel, bool forced)
  * @param defaultModel the default model
  * @param forced true if the default model shold be forced in spite of tune model
  */
-SidConfig::sid_model_t getSidModel(SidTuneInfo::model_t sidModel, SidConfig::sid_model_t defaultModel, bool forced)
+SidConfig::sid_model_t makeSidModel(SidTuneInfo::model_t sidModel, SidConfig::sid_model_t defaultModel, bool forced)
 {
     SidTuneInfo::model_t tuneModel = sidModel;
 
@@ -497,12 +511,17 @@ void Player::sidCreate(sidbuilder *builder, SidConfig::sid_model_t defaultModel,
         const SidTuneInfo* tuneInfo = m_tune->getInfo();
 
         // Setup base SID
-        const SidConfig::sid_model_t userModel = getSidModel(tuneInfo->sidModel(0), defaultModel, forced);
+        const SidConfig::sid_model_t userModel = makeSidModel(tuneInfo->sidModel(0), defaultModel, forced);
         sidemu *s = builder->lock(m_c64.getEventScheduler(), userModel, digiboost);
         if (!builder->getStatus())
         {
             throw configError(builder->error());
         }
+
+        m_sidModels.clear();
+        m_sidAddresses.clear();
+        m_sidModels.push_back(userModel);
+        m_sidAddresses.push_back(0xd400);
 
         m_c64.setBaseSid(s);
         m_mixer.addSid(s);
@@ -518,7 +537,7 @@ void Player::sidCreate(sidbuilder *builder, SidConfig::sid_model_t defaultModel,
 
             for (unsigned int i = 0; i < extraSidChips; i++)
             {
-                const SidConfig::sid_model_t userModel = getSidModel(tuneInfo->sidModel(i+1), defaultModel, forced);
+                const SidConfig::sid_model_t userModel = makeSidModel(tuneInfo->sidModel(i+1), defaultModel, forced);
 
                 sidemu *s = builder->lock(m_c64.getEventScheduler(), userModel, digiboost);
                 if (!builder->getStatus())
@@ -526,6 +545,8 @@ void Player::sidCreate(sidbuilder *builder, SidConfig::sid_model_t defaultModel,
                     throw configError(builder->error());
                 }
 
+                m_sidModels.push_back(userModel);
+                m_sidAddresses.push_back(extraSidAddresses[i]);
                 if (!m_c64.addExtraSid(s, extraSidAddresses[i]))
                     throw configError(ERR_UNSUPPORTED_SID_ADDR);
 
