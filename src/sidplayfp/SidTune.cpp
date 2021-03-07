@@ -99,7 +99,7 @@ void SidTune::load(LoaderFunc loader, const char* fileName, bool separatorIsSlas
     }
 }
 
-void SidTune::read(const uint_least8_t* sourceBuffer, uint_least32_t bufferLen)
+void SidTune::read(const uint8_t* sourceBuffer, uint_least32_t bufferLen)
 {
     try
     {

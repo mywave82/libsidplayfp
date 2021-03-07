@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <vector>
 
 #include "sidplayfp/siddefs.h"
 #include "sidplayfp/sidversion.h"
@@ -108,7 +109,7 @@ public:
      *         or #isPlaying() is false an error occurred, use #error()
      *         to get a detailed message.
      */
-    uint_least32_t play(short *buffer, uint_least32_t count);
+    uint_least32_t play(int16_t *buffer, uint_least32_t count, std::vector<int16_t *> *rawSamples = nullptr);
 
     /**
      * Check if the engine is playing or stopped.
@@ -140,6 +141,17 @@ public:
      * @param enable true unmutes the channel, false mutes it.
      */
     void mute(unsigned int sidNum, unsigned int voice, bool enable);
+
+    /**
+     * Get the status of the given SID chip.
+     *
+     * @param sidNum the SID chip, 0 for the first one, 1 for the second.
+     * @param registers returns a pointer to an array 32 (only first 25 are
+     *             needed) entries long that gives the last known write-status
+     *             of the SID chip.
+     * @return true on sucess, false otherwise (invalid sidNum).
+     */
+    bool getSidStatus(unsigned int sidNum, uint8_t registers[32]);
 
     /**
      * Get the current playing time.

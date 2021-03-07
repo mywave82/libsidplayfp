@@ -27,6 +27,7 @@
 
 
 #ifdef HAVE_CXX17
+#  undef HAVE_CXX14 // avoid warning about redefine
 #  define HAVE_CXX14
 #  define MAYBE_UNUSED [[ maybe_unused ]]
 #else
@@ -34,6 +35,7 @@
 #endif
 
 #ifdef HAVE_CXX14
+#  undef HAVE_CXX11 // avoid warning about redefine
 #  define HAVE_CXX11
 #  define MAKE_UNIQUE(type, ...) std::make_unique<type>(__VA_ARGS__)
 #else

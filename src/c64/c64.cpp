@@ -32,14 +32,6 @@ namespace libsidplayfp
 
 typedef struct
 {
-    double colorBurst;         ///< Colorburst frequency in Herz
-    double divider;            ///< Clock frequency divider
-    double powerFreq;          ///< Power line frequency in Herz
-    MOS656X::model_t vicModel; ///< Video chip model
-} model_data_t;
-
-typedef struct
-{
     MOS652X::model_t ciaModel; ///< CIA chip model
 } cia_model_data_t;
 

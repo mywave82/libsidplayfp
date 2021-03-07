@@ -20,6 +20,7 @@ src/config.h.in
 *.o
 *.la
 *.lo
+src/builders/resid-builder/resid/siddefs.h
 src/builders/residfp-builder/residfp/siddefs-fp.h
 src/config.h
 src/stamp-h1

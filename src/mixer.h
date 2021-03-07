@@ -90,7 +90,7 @@ public:
 
 private:
     std::vector<sidemu*> m_chips;
-    std::vector<short*> m_buffers;
+    std::vector<int16_t*> m_buffers;
 
     std::vector<int_least32_t> m_iSamples;
     std::vector<int_least32_t> m_volume;
@@ -105,6 +105,7 @@ private:
     short         *m_sampleBuffer;
     uint_least32_t m_sampleCount;
     uint_least32_t m_sampleIndex;
+    std::vector<int16_t*> *m_rawBuffers;
 
     uint_least32_t m_sampleRate;
 
@@ -211,7 +212,7 @@ public:
      *
      * @throws badBufferSize
      */
-    void begin(short *buffer, uint_least32_t count);
+    void begin(int16_t *buffer, uint_least32_t count, std::vector<int16_t*> *rawBuffers = nullptr);
 
     /**
      * Remove all SIDs from the mixer.

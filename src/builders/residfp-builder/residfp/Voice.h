@@ -77,6 +77,12 @@ public:
         return wavDAC[wav] * envDAC[env];
     }
 
+    RESID_INLINE
+    float volume(void) const
+    {
+        return envelopeGenerator->output();
+    }
+
     /**
      * Constructor.
      */

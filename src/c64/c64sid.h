@@ -46,6 +46,7 @@ protected:
     virtual void write(uint_least8_t addr, uint8_t data) = 0;
 
 public:
+    c64sid(void) : lastpoke{0} {};
     virtual void reset(uint8_t volume) = 0;
 
     void reset() { memset(lastpoke, 0, 0x20); reset(0); }
@@ -57,6 +58,8 @@ public:
         write(address & 0x1f, value);
     }
     uint8_t peek(uint_least16_t address) override { return read(address & 0x1f); }
+
+    virtual void GetVolumes(uint8_t &a, uint8_t &b, uint8_t &c) const = 0;
 
     void getStatus(uint8_t regs[0x20]) const { memcpy(regs, lastpoke, 0x20); }
 };
