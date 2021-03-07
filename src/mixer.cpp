@@ -45,7 +45,7 @@ void Mixer::resetBufs()
 
 void Mixer::doMix()
 {
-    short *outputBuffer = m_sampleBuffer + m_sampleIndex;
+    int16_t *outputBuffer = m_sampleBuffer + m_sampleIndex;
 
     // extract buffer info now that the SID is updated.
     // clock() may update bufferpos.
@@ -64,13 +64,31 @@ void Mixer::doMix()
         for (size_t k = 0; k < m_buffers.size(); k++)
         {
             int_least32_t sample = 0;
-            const short *buffer = m_buffers[k] + i;
-            for (int j = 0; j < m_fastForwardFactor; j++)
+            const int16_t *buffer = m_buffers[k] + (i<<2);
+	    int j;
+            for (j = 0; j < m_fastForwardFactor; j++)
             {
-                sample += buffer[j];
+                sample += buffer[j<<2];
             }
 
             m_iSamples[k] = sample / m_fastForwardFactor;
+            if (m_rawBuffers)
+            {
+                if (m_stereo)
+                { /* m_sampleIndex counts two samples per source sample when stereo */
+                  //(*m_rawBuffers)[k][(m_sampleIndex << 1) + 0] = m_buffers[k][(j << 2)-4];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 1) + 0] = m_iSamples[k];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 1) + 1] = buffer[(j << 2)-3];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 1) + 2] = buffer[(j << 2)-2];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 1) + 3] = buffer[(j << 2)-1];
+                } else {
+                  //(*m_rawBuffers)[k][(m_sampleIndex << 2) + 0] = m_buffers[k][(j << 2)-4];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 2) + 0] = m_iSamples[k];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 2) + 1] = buffer[(j << 2)-3];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 2) + 2] = buffer[(j << 2)-2];
+                    (*m_rawBuffers)[k][(m_sampleIndex << 2) + 3] = buffer[(j << 2)-1];
+                }
+            }
         }
 
         // increment i to mark we ate some samples, finish the boxcar thing.
@@ -81,7 +99,7 @@ void Mixer::doMix()
         {
             const int_least32_t tmp = (this->*(m_scale[ch]))(ch);
             assert(tmp >= -32768 && tmp <= 32767);
-            *outputBuffer++ = static_cast<short>(tmp);
+            *outputBuffer++ = static_cast<int16_t>(tmp);
             m_sampleIndex++;
         }
     }
@@ -90,8 +108,8 @@ void Mixer::doMix()
     const int samplesLeft = sampleCount - i;
     assert(samplesLeft >= 0);
 
-    for (short* buffer: m_buffers)
-        std::memmove(buffer, buffer+i, samplesLeft*2);
+    for (int16_t* buffer: m_buffers)
+        std::memmove(buffer, buffer+(i<<2), (samplesLeft*sizeof(int16_t))<<2);
 
     for (sidemu* chip: m_chips)
         chip->bufferpos(samplesLeft);
@@ -99,7 +117,7 @@ void Mixer::doMix()
     m_wait = static_cast<uint_least32_t>(samplesLeft) > m_sampleCount;
 }
 
-void Mixer::begin(short *buffer, uint_least32_t count)
+void Mixer::begin(int16_t *buffer, uint_least32_t count, std::vector<int16_t*> *rawBuffers)
 {
     // sanity checks
 
@@ -112,6 +130,8 @@ void Mixer::begin(short *buffer, uint_least32_t count)
     m_sampleBuffer = buffer;
 
     m_wait = false;
+
+    m_rawBuffers = rawBuffers;
 }
 
 void Mixer::updateParams()

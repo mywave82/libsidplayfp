@@ -114,7 +114,7 @@ SidTuneBase* SidTuneBase::load(LoaderFunc loader, const char* fileName,
     return getFromFiles(loader, fileName, fileNameExt, separatorIsSlash);
 }
 
-SidTuneBase* SidTuneBase::read(const uint_least8_t* sourceBuffer, uint_least32_t bufferLen)
+SidTuneBase* SidTuneBase::read(const uint8_t* sourceBuffer, uint_least32_t bufferLen)
 {
     return getFromBuffer(sourceBuffer, bufferLen);
 }
