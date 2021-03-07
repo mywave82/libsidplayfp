@@ -64,6 +64,10 @@ private:
 private:
     /// Commodore 64 emulator
     c64 m_c64;
+    c64::model_t m_model;
+
+    std::vector<SidConfig::sid_model_t> m_sidModels;
+    std::vector<unsigned int> m_sidAddresses;
 
     /// Mixer
     Mixer m_mixer;
@@ -137,13 +141,21 @@ public:
 
     const SidInfo &info() const { return m_info; }
 
+    c64::model_t getModel () const { return m_model; }
+
+    unsigned int getSidCount () const { return m_sidModels.size(); }
+    SidConfig::sid_model_t getSidModel (unsigned int i) const { return m_sidModels[i]; }
+    unsigned int getSidAddress (unsigned int i) const { return m_sidAddresses[i]; }
+
+    double getMainCpuSpeed () const { return m_c64.getMainCpuSpeed(); }
+
     bool config(const SidConfig &cfg, bool force=false);
 
     bool fastForward(unsigned int percent);
 
     bool load(SidTune *tune);
 
-    uint_least32_t play(short *buffer, uint_least32_t samples);
+    uint_least32_t play(int16_t *buffer, uint_least32_t samples, std::vector<int16_t*> *rawBuffers = nullptr);
 
     bool isPlaying() const { return m_isPlaying != state_t::STOPPED; }
 
@@ -156,6 +168,8 @@ public:
     void mute(unsigned int sidNum, unsigned int voice, bool enable);
 
     void filter(unsigned int sidNum, bool enable);
+
+    bool getSidStatus(unsigned int sidNum, uint8_t registers[32], uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c);
 
     const char *error() const { return m_errorString; }
 

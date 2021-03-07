@@ -56,7 +56,7 @@ ReSID::ReSID(sidbuilder *builder) :
     m_sid(*(new reSID::SID)),
     m_voiceMask(0x07)
 {
-    m_buffer = new short[OUTPUTBUFFERSIZE];
+    m_buffer = new int16_t[OUTPUTBUFFERSIZE*4];
     reset(0);
 }
 
@@ -95,7 +95,7 @@ void ReSID::clock()
 {
     reSID::cycle_count cycles = eventScheduler->getTime(EVENT_CLOCK_PHI1) - m_accessClk;
     m_accessClk += cycles;
-    m_bufferpos += m_sid.clock(cycles, (short *) m_buffer + m_bufferpos, OUTPUTBUFFERSIZE - m_bufferpos, 1);
+    m_bufferpos += m_sid.clock(cycles, m_buffer + (m_bufferpos<<2), OUTPUTBUFFERSIZE - m_bufferpos);
     // Adjust in case not all cycles have been consumed
     m_accessClk -= cycles;
 }
@@ -162,6 +162,16 @@ void ReSID::model(SidConfig::sid_model_t model, bool digiboost)
     m_sid.set_voice_mask(m_voiceMask);
     m_sid.input(sample);
     m_status = true;
+}
+
+void ReSID::GetVolumes(uint8_t &a, uint8_t &b, uint8_t &c) const
+{
+    int _a = m_sid.voice_volume(0);
+    int _b = m_sid.voice_volume(1);
+    int _c = m_sid.voice_volume(2);
+    if (_a < 0) a = 0; else if (_a > 255) a = 255; else a = _a;
+    if (_b < 0) b = 0; else if (_b > 255) b = 255; else b = _b;
+    if (_c < 0) c = 0; else if (_c > 255) c = 255; else c = _c;
 }
 
 }

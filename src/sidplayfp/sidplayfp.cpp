@@ -56,9 +56,9 @@ void sidplayfp::stop()
     sidplayer.stop();
 }
 
-uint_least32_t sidplayfp::play(short *buffer, uint_least32_t count)
+uint_least32_t sidplayfp::play(int16_t *buffer, uint_least32_t count, std::vector<int16_t *> *rawSamples)
 {
-    return sidplayer.play(buffer, count);
+    return sidplayer.play(buffer, count, rawSamples);
 }
 
 bool sidplayfp::load(SidTune *tune)
@@ -99,6 +99,11 @@ void sidplayfp::mute(unsigned int sidNum, unsigned int voice, bool enable)
 void sidplayfp::filter(unsigned int sidNum, bool enable)
 {
     sidplayer.filter(sidNum, enable);
+}
+
+bool sidplayfp::getSidStatus(unsigned int sidNum, uint8_t& gatestoggle, uint8_t& syncstoggle, uint8_t& teststoggle, uint8_t **registers)
+{
+    return sidplayer.getSidStatus(sidNum, gatestoggle, syncstoggle, teststoggle, registers);
 }
 
 void sidplayfp::debug(bool enable, FILE *out)
