@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2019 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2000-2001 Simon White
  *
@@ -72,7 +72,9 @@ Player::Player() :
     m_isPlaying(STOPPED),
     m_rand((unsigned int)::time(0))
 {
-    m_c64.setRoms(nullptr, nullptr, nullptr);
+    // We need at least some minimal interrupt handling
+    m_c64.getMemInterface().setKernal(nullptr);
+
     config(m_cfg);
 
     // Get component credits
@@ -93,13 +95,22 @@ inline void checkRom(const uint8_t* rom, std::string &desc)
         desc.clear();
 }
 
-void Player::setRoms(const uint8_t* kernal, const uint8_t* basic, const uint8_t* character)
+void Player::setKernal(const uint8_t* rom)
 {
-    checkRom<kernalCheck>(kernal, m_info.m_kernalDesc);
-    checkRom<basicCheck>(basic, m_info.m_basicDesc);
-    checkRom<chargenCheck>(character, m_info.m_chargenDesc);
+    checkRom<kernalCheck>(rom, m_info.m_kernalDesc);
+    m_c64.getMemInterface().setKernal(rom);
+}
 
-    m_c64.setRoms(kernal, basic, character);
+void Player::setBasic(const uint8_t* rom)
+{
+    checkRom<basicCheck>(rom, m_info.m_basicDesc);
+    m_c64.getMemInterface().setBasic(rom);
+}
+
+void Player::setChargen(const uint8_t* rom)
+{
+    checkRom<chargenCheck>(rom, m_info.m_chargenDesc);
+    m_c64.getMemInterface().setChargen(rom);
 }
 
 bool Player::fastForward(unsigned int percent)
@@ -172,16 +183,14 @@ bool Player::load(SidTune *tune)
     return true;
 }
 
-bool Player::getSidStatus(unsigned int sidNum, uint8_t& gatestoggle, uint8_t& syncstoggle, uint8_t& teststoggle, uint8_t **registers, uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c)
+bool Player::getSidStatus(unsigned int sidNum, uint8_t registers[32], uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c)
 {
     sidemu *s = m_mixer.getSid(sidNum);
     if (s == nullptr)
     {
-        *registers = nullptr;
         return false;
     }
-    s->getToggles(gatestoggle, syncstoggle, teststoggle);
-    *registers = s->lastpoke;
+    s->getStatus((uint8_t *)registers);
     s->GetVolumes(volume_a, volume_b, volume_c);
     return true;
 }
@@ -283,6 +292,17 @@ void Player::stop()
     }
 }
 
+c64::cia_model_t getCiaModel(SidConfig::cia_model_t model)
+{
+    switch (model)
+    {
+    default:
+    case SidConfig::MOS6526: return c64::OLD;
+    case SidConfig::MOS8521: return c64::NEW;
+    case SidConfig::MOS6526W4485: return c64::OLD_4485;
+    }
+}
+
 bool Player::config(const SidConfig &cfg, bool force)
 {
     // Check if configuration have been changed or forced
@@ -324,11 +344,12 @@ bool Player::config(const SidConfig &cfg, bool force)
             // environment setup call)
             sidCreate(cfg.sidEmulation, cfg.defaultSidModel, cfg.digiBoost, cfg.forceSidModel, addresses);
 
-            // Determine clock speed
-            m_model = c64model(cfg.defaultC64Model, cfg.forceC64Model);
+            // Determine c64 model
+            const c64::model_t model = c64model(cfg.defaultC64Model, cfg.forceC64Model);
+            m_c64.setModel(model);
 
-            m_c64.setModel(m_model);
-            m_c64.setCiaModel(cfg.ciaModel);
+            const c64::cia_model_t ciaModel = getCiaModel(cfg.ciaModel);
+            m_c64.setCiaModel(ciaModel);
 
             sidParams(m_c64.getMainCpuSpeed(), cfg.frequency, cfg.samplingMethod, cfg.fastSampling);
 
@@ -567,6 +588,17 @@ void Player::sidParams(double cpuFreq, int frequency,
 
         s->sampling((float)cpuFreq, frequency, sampling, fastSampling);
     }
+}
+
+bool Player::getSidStatus(unsigned int sidNum, uint8_t regs[32])
+{
+    sidemu *s = m_mixer.getSid(sidNum);
+
+    if (s == nullptr)
+        return false;
+
+    s->getStatus(regs);
+    return true;
 }
 
 }

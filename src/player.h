@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2019 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2000-2001 Simon White
  *
@@ -168,13 +168,17 @@ public:
 
     void mute(unsigned int sidNum, unsigned int voice, bool enable);
 
-    bool getSidStatus(unsigned int sidNum, uint8_t& gatestoggle, uint8_t& syncstoggle, uint8_t& teststoggle, uint8_t **registers, uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c);
+    bool getSidStatus(unsigned int sidNum, uint8_t registers[32], uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c);
 
     const char *error() const { return m_errorString; }
 
-    void setRoms(const uint8_t* kernal, const uint8_t* basic, const uint8_t* character);
+    void setKernal(const uint8_t* rom);
+    void setBasic(const uint8_t* rom);
+    void setChargen(const uint8_t* rom);
 
     uint_least16_t getCia1TimerA() const { return m_c64.getCia1TimerA(); }
+
+    bool getSidStatus(unsigned int sidNum, uint8_t regs[32]);
 };
 
 }

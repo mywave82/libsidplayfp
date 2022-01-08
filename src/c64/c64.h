@@ -91,6 +91,13 @@ public:
         ,PAL_M        ///< C64 Brasil
     } model_t;
 
+    typedef enum
+    {
+        OLD = 0     ///< Old CIA
+        ,NEW        ///< New CIA
+        ,OLD_4485   ///< Old CIA, special batch labeled 4485
+    } cia_model_t;
+
 private:
     typedef std::map<int, ExtraSidBank*> sidBankMap_t;
 
@@ -228,12 +235,7 @@ public:
     /**
      * Set the cia model.
      */
-    void setCiaModel(bool newModel);
-
-    void setRoms(const uint8_t* kernal, const uint8_t* basic, const uint8_t* character)
-    {
-        mmu.setRoms(kernal, basic, character);
-    }
+    void setCiaModel(cia_model_t model);
 
     /**
      * Get the CPU clock speed.

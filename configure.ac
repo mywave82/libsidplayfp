@@ -1,5 +1,5 @@
 m4_define([lib_major], [2])
-m4_define([lib_minor], [1])
+m4_define([lib_minor], [3])
 m4_define([lib_level], [1])
 m4_define([lib_version], [lib_major.lib_minor.lib_level])
 
@@ -37,6 +37,7 @@ dnl Use C++ for tests.
 AC_LANG([C++])
 
 AX_CXX_COMPILE_STDCXX_11([noext], [optional])
+AX_CXX_COMPILE_STDCXX_14([noext], [optional])
 
 dnl check for hidden visibility support
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden -fvisibility-inlines-hidden], [has_visibility=yes], [has_visibility=no])
@@ -94,9 +95,9 @@ dnl libtool-style version-info number
 #
 # Increase the age value only if the changes made to the ABI are backward compatible.
 
-LIBSIDPLAYCUR=8
-LIBSIDPLAYREV=17
-LIBSIDPLAYAGE=2
+LIBSIDPLAYCUR=9
+LIBSIDPLAYREV=23
+LIBSIDPLAYAGE=3
 LIBSIDPLAYVERSION=$LIBSIDPLAYCUR:$LIBSIDPLAYREV:$LIBSIDPLAYAGE
 
 LIBSTILVIEWCUR=0
@@ -134,25 +135,32 @@ AS_IF([test x"$enable_inline" != "xno"],
   [RESID_INLINE=""; RESID_INLINING=0]
 )
 
-AC_ARG_ENABLE([mmx],
-  [AS_HELP_STRING([--enable-mmx],
-    [enable MMX optimization [default=no]])]
+AC_ARG_WITH(
+    [simd],
+    [AS_HELP_STRING([--with-simd], [Build with SIMD optimizations [@<:@sse2/mmx/neon/none, default=none@:>@]])],
+    [],
+    [with_simd=none]
 )
 
-AS_IF([test x"$enable_mmx" = xyes],
-# Testing for mmintrin.h requires compiler support
-# for mmx support activated by specific flags
-# these are most probably defined in CXXFLAGS
-# but AC_CHECK_HEADERS uses only CPPFLAGS
-# so we need a workaround
-  [saveCPPFLAGS=$CPPFLAGS
-   CPPFLAGS="$CPPFLAGS $CXXFLAGS"
+AS_IF([test x"$with_simd" != xnone],
+    # Testing for intrinsic headers requires compiler
+    # support activated by specific flags.
+    # These are most likely defined in CXXFLAGS
+    # but AC_CHECK_HEADERS uses only CPPFLAGS
+    # so we need a workaround.
+    [saveCPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$CPPFLAGS $CXXFLAGS"
 
-   AC_CHECK_HEADERS([mmintrin.h])
+    AS_CASE([$with_simd],
+        [sse2], [AC_CHECK_HEADERS([emmintrin.h])],
+        [mmx],  [AC_CHECK_HEADERS([mmintrin.h])],
+        [neon], [AC_CHECK_HEADERS([arm_neon.h])],
+        [AC_MSG_ERROR([Unrecognized SIMD specified])]
+    )
 
-   CPPFLAGS=$saveCPPFLAGS]
+    CPPFLAGS=$saveCPPFLAGS]
 )
- 
+
 AC_CACHE_CHECK([for working bool], ac_cv_cxx_bool,
 [AC_COMPILE_IFELSE(
   [AC_LANG_PROGRAM([],
@@ -305,8 +313,8 @@ AS_IF(
 )
 
 AS_IF(
-    [test "x$with_exsid" = "xyes" -a "x$build_exsid_driver" != xyes],
-    [AC_MSG_ERROR([Neither libexid nor ftd2xx nor libftdi1 found])]
+    [test "x$with_exsid" = "xyes" -a "x$build_exsid_builder" != xyes],
+    [AC_MSG_ERROR([Neither libexsid nor ftd2xx nor libftdi1 found])]
 )
 
 AC_SUBST([FTDI_CFLAGS])

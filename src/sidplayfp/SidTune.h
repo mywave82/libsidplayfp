@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2020 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2000 Simon White
  *
@@ -24,6 +24,7 @@
 #define SIDTUNE_H
 
 #include <stdint.h>
+#include <vector>
 
 #include "sidplayfp/siddefs.h"
 
@@ -56,6 +57,8 @@ private:  // -------------------------------------------------------------
 
 public:  // ----------------------------------------------------------------
 
+    typedef void (*LoaderFunc)(const char* fileName, std::vector<uint8_t>& bufferRef);
+
     /**
      * Load a sidtune from a file.
      *
@@ -73,6 +76,21 @@ public:  // ----------------------------------------------------------------
      * @param separatorIsSlash
      */
     SidTune(const char* fileName, const char **fileNameExt = 0,
+            bool separatorIsSlash = false);
+
+    /**
+     * Load a sidtune from a file, using a file access callback.
+     *
+     * This function does the same as the above, except that it
+     * accepts a callback function, which will be used to read
+     * all files it accesses.
+     *
+     * @param loader
+     * @param fileName
+     * @param fileNameExt
+     * @param separatorIsSlash
+     */
+    SidTune(LoaderFunc loader, const char* fileName, const char **fileNameExt = 0,
             bool separatorIsSlash = false);
 
     /**
@@ -103,6 +121,16 @@ public:  // ----------------------------------------------------------------
      * @param separatorIsSlash
      */
     void load(const char* fileName, bool separatorIsSlash = false);
+
+    /**
+     * Load a sidtune into an existing object from a file,
+     * using a file access callback.
+     *
+     * @param loader
+     * @param fileName
+     * @param separatorIsSlash
+     */
+    void load(LoaderFunc loader, const char* fileName, bool separatorIsSlash = false);
 
     /**
      * Load a sidtune into an existing object from a buffer.

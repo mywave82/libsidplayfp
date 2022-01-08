@@ -28,14 +28,14 @@
 #include <memory>
 
 #include "Filter.h"
-#include "FilterModelConfig.h"
+#include "FilterModelConfig6581.h"
 
 #include "sidcxx11.h"
 
 namespace reSIDfp
 {
 
-class Integrator;
+class Integrator6581;
 
 /**
  * The SID filter is modeled with a two-integrator-loop biquadratic filter,
@@ -332,10 +332,10 @@ private:
     const int voiceDC;
 
     /// VCR + associated capacitor connected to highpass output.
-    std::unique_ptr<Integrator> const hpIntegrator;
+    std::unique_ptr<Integrator6581> const hpIntegrator;
 
     /// VCR + associated capacitor connected to bandpass output.
-    std::unique_ptr<Integrator> const bpIntegrator;
+    std::unique_ptr<Integrator6581> const bpIntegrator;
 
 protected:
     /**
@@ -354,14 +354,14 @@ protected:
 
 public:
     Filter6581() :
-        f0_dac(FilterModelConfig::getInstance()->getDAC(0.5)),
-        mixer(FilterModelConfig::getInstance()->getMixer()),
-        summer(FilterModelConfig::getInstance()->getSummer()),
-        gain(FilterModelConfig::getInstance()->getGain()),
-        voiceScaleS11(FilterModelConfig::getInstance()->getVoiceScaleS11()),
-        voiceDC(FilterModelConfig::getInstance()->getVoiceDC()),
-        hpIntegrator(FilterModelConfig::getInstance()->buildIntegrator()),
-        bpIntegrator(FilterModelConfig::getInstance()->buildIntegrator())
+        f0_dac(FilterModelConfig6581::getInstance()->getDAC(0.5)),
+        mixer(FilterModelConfig6581::getInstance()->getMixer()),
+        summer(FilterModelConfig6581::getInstance()->getSummer()),
+        gain(FilterModelConfig6581::getInstance()->getGain()),
+        voiceScaleS11(FilterModelConfig6581::getInstance()->getVoiceScaleS11()),
+        voiceDC(FilterModelConfig6581::getInstance()->getVoiceDC()),
+        hpIntegrator(FilterModelConfig6581::getInstance()->buildIntegrator()),
+        bpIntegrator(FilterModelConfig6581::getInstance()->buildIntegrator())
     {
         input(0);
     }
@@ -384,7 +384,7 @@ public:
 
 #if RESID_INLINING || defined(FILTER6581_CPP)
 
-#include "Integrator.h"
+#include "Integrator6581.h"
 
 namespace reSIDfp
 {

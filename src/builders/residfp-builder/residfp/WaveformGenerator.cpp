@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2019 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004 Dag Lem <resid@nimrod.no>
  *
@@ -24,7 +24,18 @@
 
 #include "WaveformGenerator.h"
 
-#include "Dac.h"
+/*
+ * This fixes tests
+ *  SID/wb_testsuite/noise_writeback_check_8_to_C_old
+ *  SID/wb_testsuite/noise_writeback_check_9_to_C_old
+ *  SID/wb_testsuite/noise_writeback_check_A_to_C_old
+ *  SID/wb_testsuite/noise_writeback_check_C_to_C_old
+ *
+ * but breaks SID/wf12nsr/wf12nsr
+ *
+ * needs more digging...
+ */
+//#define NO_WB_NOI_PUL
 
 namespace reSIDfp
 {
@@ -67,8 +78,6 @@ const unsigned int SHIFT_REGISTER_RESET_6581R4 = 2150000;
 // ~2.8s
 const unsigned int SHIFT_REGISTER_RESET_8580R5 =  986000;
 const unsigned int SHIFT_REGISTER_FADE_8580R5  =  314300;
-
-const int DAC_BITS = 12;
 
 /*
  * This is what happens when the lfsr is clocked:
@@ -122,7 +131,7 @@ void WaveformGenerator::write_shift_register()
     {
         // Write changes to the shift register output caused by combined waveforms
         // back into the shift register. This happens only when the register is clocked
-        // (see $D1+$81_wave_test [1]) or when the test bit is set.
+        // (see $D1+$81_wave_test [1]) or when the test bit is falling.
         // A bit once set to zero cannot be changed, hence the and'ing.
         //
         // [1] ftp://ftp.untergrund.net/users/nata/sid_test/$D1+$81_wave_test.7z
@@ -130,10 +139,14 @@ void WaveformGenerator::write_shift_register()
         // FIXME: Write test program to check the effect of 1 bits and whether
         // neighboring bits are affected.
 
+#ifdef NO_WB_NOI_PUL
+        if (waveform == 0xc)
+            return;
+#endif
         shift_register &= get_noise_writeback();
 
         noise_output &= waveform_output;
-        no_noise_or_noise_output = no_noise | noise_output;
+        set_no_noise_or_noise_output();
     }
 }
 
@@ -149,28 +162,12 @@ void WaveformGenerator::set_noise_output()
         ((shift_register & (1 << 20)) >> 15) |  // Bit  2 -> bit  5
         ((shift_register & (1 << 22)) >> 18);   // Bit  0 -> bit  4
 
-    no_noise_or_noise_output = no_noise | noise_output;
+    set_no_noise_or_noise_output();
 }
 
 void WaveformGenerator::setWaveformModels(matrix_t* models)
 {
     model_wave = models;
-}
-
-void WaveformGenerator::setChipModel(ChipModel chipModel)
-{
-    is6581 = chipModel == MOS6581;
-
-    Dac dacBuilder(DAC_BITS);
-    dacBuilder.kinkedDac(chipModel);
-
-    const double offset = dacBuilder.getOutput(is6581 ? 0x380 : 0x9c0);
-
-    for (unsigned int i = 0; i < (1 << DAC_BITS); i++)
-    {
-        const double dacValue = dacBuilder.getOutput(i);
-        dac[i] = static_cast<float>(dacValue - offset);
-    }
 }
 
 void WaveformGenerator::synchronize(WaveformGenerator* syncDest, const WaveformGenerator* syncSource) const
@@ -198,9 +195,49 @@ bool do_pre_writeback(unsigned int waveform_prev, unsigned int waveform, bool is
             || (((waveform_prev & 0x3) == 0x2) && ((waveform & 0x3) == 0x1))))
         return false;
     if (waveform_prev == 0xc)
+    {
+        if (is6581)
+            return false;
+        else if ((waveform != 0x9) && (waveform != 0xe))
+            return false;
+    }
+#ifdef NO_WB_NOI_PUL
+    if (waveform == 0xc)
         return false;
+#endif
     // ok do the writeback
     return true;
+}
+
+/*
+ * When noise and pulse are combined all the bits are
+ * connected and the four lower ones are grounded.
+ * This causes the adjacent bits to be pulled down,
+ * with different strength depending on model.
+ *
+ * This is just a rough attempt at modelling the effect.
+ */
+ 
+static unsigned int noise_pulse6581(unsigned int noise)
+{
+    return (noise < 0xf00) ? 0x000 : noise & (noise << 1) & (noise << 2);
+}
+
+static unsigned int noise_pulse8580(unsigned int noise)
+{
+    return (noise < 0xfc0) ? noise & (noise << 1) : 0xfc0;
+}
+
+void WaveformGenerator::set_no_noise_or_noise_output()
+{
+    no_noise_or_noise_output = no_noise | noise_output;
+
+    // pulse+noise
+    if (unlikely((waveform & 0xc) == 0xc))
+        no_noise_or_noise_output = is6581
+            ? noise_pulse6581(no_noise_or_noise_output)
+            : noise_pulse8580(no_noise_or_noise_output);
+
 }
 
 void WaveformGenerator::writeCONTROL_REG(unsigned char control)
@@ -224,7 +261,7 @@ void WaveformGenerator::writeCONTROL_REG(unsigned char control)
         // only let the noise or pulse influence the output when the noise or pulse
         // waveforms are selected.
         no_noise = (waveform & 0x8) != 0 ? 0x000 : 0xfff;
-        no_noise_or_noise_output = no_noise | noise_output;
+        set_no_noise_or_noise_output();
         no_pulse = (waveform & 0x4) != 0 ? 0x000 : 0xfff;
 
         if (waveform == 0)
@@ -263,9 +300,6 @@ void WaveformGenerator::writeCONTROL_REG(unsigned char control)
 
             // bit0 = (bit22 | test) ^ bit17 = 1 ^ bit17 = ~bit17
             clock_shift_register((~shift_register << 17) & (1 << 22));
-
-            // New noise waveform output.
-            set_noise_output();
         }
     }
 }
@@ -310,7 +344,9 @@ void WaveformGenerator::reset()
     shift_register_reset = 0;
     shift_register = 0x7fffff;
     // when reset is released the shift register is clocked once
-    clock_shift_register((~shift_register << 17) & (1 << 22));
+    // so the lower bit is zeroed out
+    // bit0 = (bit22 | test) ^ bit17 = 1 ^ 1 = 0
+    clock_shift_register(0);
 
     shift_pipeline = 0;
 

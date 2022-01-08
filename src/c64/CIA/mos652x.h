@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2020 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2009-2014 VICE Project
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2000 Simon White
@@ -21,8 +21,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef MOS6526_H
-#define MOS6526_H
+#ifndef MOS652X_H
+#define MOS652X_H
 
 #include <memory>
 
@@ -41,7 +41,7 @@ class EventContext;
 namespace libsidplayfp
 {
 
-class MOS6526;
+class MOS652X;
 
 /**
  * This is the timer A of this CIA.
@@ -63,7 +63,7 @@ public:
     /**
      * Create timer A.
      */
-    TimerA(EventScheduler &scheduler, MOS6526 &parent) :
+    TimerA(EventScheduler &scheduler, MOS652X &parent) :
         Timer("CIA Timer A", scheduler, parent) {}
 };
 
@@ -82,7 +82,7 @@ public:
     /**
      * Create timer B.
      */
-    TimerB(EventScheduler &scheduler, MOS6526 &parent) :
+    TimerB(EventScheduler &scheduler, MOS652X &parent) :
         Timer("CIA Timer B", scheduler, parent) {}
 
     /**
@@ -109,8 +109,34 @@ public:
  */
 class InterruptSource8521 final : public InterruptSource
 {
+protected:
+    void triggerInterrupt() override
+    {
+        idr |= INTERRUPT_REQUEST;
+        idrTemp |= INTERRUPT_REQUEST;
+
+        if (ack0())
+            scheduleIrq();
+    }
+
 public:
-    InterruptSource8521(EventScheduler &scheduler, MOS6526 &parent) :
+    InterruptSource8521(EventScheduler &scheduler, MOS652X &parent) :
+        InterruptSource(scheduler, parent)
+    {}
+
+    void trigger(uint8_t interruptMask) override;
+};
+
+/**
+ * InterruptSource that acts like old CIA
+ */
+class InterruptSource6526 final : public InterruptSource
+{
+protected:
+    void triggerInterrupt() override { idr |= INTERRUPT_REQUEST; }
+
+public:
+    InterruptSource6526(EventScheduler &scheduler, MOS652X &parent) :
         InterruptSource(scheduler, parent)
     {}
 
@@ -120,42 +146,25 @@ public:
 };
 
 /**
- * InterruptSource that acts like old CIA
- */
-class InterruptSource6526 final : public InterruptSource
-{
-private:
-    /// Timer B bug
-    bool tbBug;
-
-private:
-    void triggerBug() { idr &= ~INTERRUPT_UNDERFLOW_B; }
-
-public:
-    InterruptSource6526(EventScheduler &scheduler, MOS6526 &parent) :
-        InterruptSource(scheduler, parent),
-        tbBug(false)
-    {}
-
-    void trigger(uint8_t interruptMask) override;
-
-    uint8_t clear() override;
-
-    void reset() override;
-};
-
-/**
  * This class is heavily based on the ciacore/ciatimer source code from VICE.
  * The CIA state machine is lifted as-is. Big thanks to VICE project!
  * The Serial Port emulation is based on Denise emu code.
  */
-class MOS6526
+class MOS652X
 {
     friend class InterruptSource;
     friend class SerialPort;
     friend class TimerA;
     friend class TimerB;
     friend class Tod;
+
+public:
+    typedef enum
+    {
+        MOS6526 = 0     ///< Old CIA model, interrupts are delayed by 1 clock
+        ,MOS8521        ///< New CIA model
+        ,MOS6526W4485   ///< A batch of old CIA model with unique serial port behavior
+    } model_t;
 
 private:
     static const char *credit;
@@ -189,7 +198,7 @@ protected:
 
     /// Events
     //@{
-    EventCallback<MOS6526> bTickEvent;
+    EventCallback<MOS652X> bTickEvent;
     //@}
 
 private:
@@ -236,7 +245,7 @@ protected:
      *
      * @param context the event context
      */
-    MOS6526(EventScheduler &scheduler);
+    MOS652X(EventScheduler &scheduler);
 
     /**
      * Signal interrupt.
@@ -275,10 +284,10 @@ protected:
 public:
     /**
      * Select chip model.
-     * 
-     * @param newModel true for new model 8521, false for old 6526
+     *
+     * @param model
      */
-    void setModel(bool newModel);
+    void setModel(model_t model);
 
     /**
      * Reset CIA.

@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2020 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2000-2001 Simon White
  *
@@ -75,18 +75,22 @@ const char *parseTime(const char *str, int_least32_t &result)
 
     if (*end == '.')
     {
-        end++;
-        long milliseconds = strtol(end, &end, 10);
-        if (milliseconds<10)
-            milliseconds *= 100;
-        else if (milliseconds<100)
-            milliseconds *= 10;
-        else if (milliseconds>=1000)
+        char *start = end + 1;
+        long milliseconds = strtol(start, &end, 10);
+        switch (end - start)
+        {
+        case 1: milliseconds *= 100; break;
+        case 2: milliseconds *= 10; break;
+        case 3: break;
+        default: throw parseError();
+        }
+        if (milliseconds<0 || milliseconds>=1000)
             throw parseError();
+
         result += milliseconds;
     }
 
-    while (!isspace(*end))
+    while ((*end != 0) && !isspace(*end))
     {
         end++;
     }
@@ -109,6 +113,23 @@ bool SidDatabase::open(const char *filename)
 
     return true;
 }
+
+#ifdef _WIN32
+bool SidDatabase::open(const wchar_t* filename)
+{
+    delete m_parser;
+    m_parser = new libsidplayfp::iniParser();
+
+    if (!m_parser->open(filename))
+    {
+        close();
+        errorString = ERR_UNABLE_TO_LOAD_DATABASE;
+        return false;
+    }
+
+    return true;
+}
+#endif
 
 void SidDatabase::close()
 {

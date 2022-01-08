@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2020 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2021 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2009-2014 VICE Project
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2001 Simon White
@@ -58,11 +58,18 @@ private:
      */
     uint8_t getXpos(unsigned int lineCycle) const
     {
-        if (lineCycle < 12)
-            lineCycle += cyclesPerLine-1;
+        // FIXME: on NTSC the xpos is not incremented at lineCycle 61
+        if (lineCycle < 13)
+            lineCycle += cyclesPerLine;
 
-        lineCycle -= 12;
-        
+        lineCycle -= 13;
+
+        // On NTSC the xpos is not incremented at lineCycle 61
+        if ((cyclesPerLine == 65) && (lineCycle > (61 - 13)))
+        {
+            lineCycle--;
+        }
+
         return lineCycle << 2;
     }
 
@@ -106,9 +113,13 @@ public:
      * @param rasterY current y raster position
      * @return true if an IRQ should be triggered
      */
-    bool retrigger(unsigned int lineCycle, unsigned int rasterY)
+    bool retrigger()
     {
-        const bool triggered = trigger(lineCycle, rasterY);
+        if (isTriggered)
+            return false;
+
+        isTriggered = true;
+
         switch (cyclesPerLine)
         {
         case 63:
@@ -119,7 +130,10 @@ public:
             lpx = 0xd5;
             break;
         }
-        return triggered;
+
+        lpy = 0;
+
+        return true;
     }
 
     /**
@@ -137,14 +151,18 @@ public:
         isTriggered = true;
 
         // don't latch on the last line, except on the first cycle
-        if ((rasterY != lastLine) || (lineCycle == 0))
+        if ((rasterY == lastLine) && (lineCycle > 0))
         {
-            // Latch current coordinates
-            lpx = getXpos(lineCycle) + 2;
-            lpy = rasterY;
+            return false;
         }
 
-        return true;
+        // Latch current coordinates
+        lpx = getXpos(lineCycle) + 2; // + 1 for MOS 85XX
+        lpy = rasterY;
+
+        // On 6569R1 and 6567R56A the interrupt is triggered only
+        // when the line is low on the first cycle of the frame.
+        return true; // false for old chip revisions
     }
 
     /**
