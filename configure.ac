@@ -1,6 +1,6 @@
 m4_define([lib_major], [2])
-m4_define([lib_minor], [3])
-m4_define([lib_level], [1])
+m4_define([lib_minor], [4])
+m4_define([lib_level], [0a])
 m4_define([lib_version], [lib_major.lib_minor.lib_level])
 
 AC_INIT([libsidplayfp],[lib_version],[],[],[https://github.com/libsidplayfp/libsidplayfp/])
@@ -36,8 +36,11 @@ AC_PROG_CXX
 dnl Use C++ for tests.
 AC_LANG([C++])
 
-AX_CXX_COMPILE_STDCXX_11([noext], [optional])
 AX_CXX_COMPILE_STDCXX_14([noext], [optional])
+AS_IF([test $ax_cv_cxx_compile_cxx14__std_cpp14 != "yes"],
+    AX_CXX_COMPILE_STDCXX_11([noext], [optional]),
+    AC_DEFINE([HAVE_CXX11])
+)
 
 dnl check for hidden visibility support
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden -fvisibility-inlines-hidden], [has_visibility=yes], [has_visibility=no])
@@ -80,9 +83,6 @@ AC_CHECK_DECL(
         [AC_CHECK_FUNCS([strnicmp])]
     )]
 )
-
-AX_LIB_GCRYPT([auto])
-AM_CONDITIONAL([LIBGCRYPT], [test "x$have_libgcrypt" = "xyes"])
 
 
 dnl libtool-style version-info number
@@ -240,24 +240,36 @@ AS_IF([test "x$enable_testsuite" != xno],
 
 AM_CONDITIONAL([TESTSUITE], [test "x$enable_testsuite" != xno])
 
-# FIXME use pkgconfig
+
+PKG_PROG_PKG_CONFIG
+
 AC_ARG_ENABLE([tests],
   [AS_HELP_STRING([--enable-tests],
     [enable unit tests [default=no]]
   )],
   [[echo Enabling unit tests]
-    AC_CHECK_HEADERS([UnitTest++/UnitTest++.h], [], AC_MSG_ERROR([UnitTest++.h header not found]))
-        AS_IF(
-                [test "x${ac_cv_header_UnitTestpp_UnitTestpp_h}" = xyes],
-                AC_CHECK_LIB([UnitTest++], [main], [unittest_libs=-lUnitTest++], AC_MSG_ERROR([UnitTest++ library not found]))
-        )
+    PKG_CHECK_MODULES(UNITTEST, [UnitTest++])
     [am_unittest=true]
   ],
   [am_unittest=false]
 )
 
 AM_CONDITIONAL([ENABLE_TEST], [test x$am_unittest = xtrue])
-AC_SUBST([unittest_libs])
+
+
+AC_ARG_WITH([gcrypt], AS_HELP_STRING([--with-gcrypt], [Build with the gcrypt library]))
+AS_IF([test "x$with_gcrypt" != "xno"],
+  [PKG_CHECK_MODULES(LIBGCRYPT,
+    [libgcrypt >= 1.8],
+    [USE_LIBGCRYPT=yes
+    AC_DEFINE([HAVE_LIBGCRYPT], 1, [Define to 1 if you have libgcrypt (-lgcrypt).])],
+    [AS_IF([test "x$with_gcrypt" = "xyes"],
+      [AC_MSG_ERROR([gcrypt requested but not found])]
+    )]
+  )]
+)
+AM_CONDITIONAL([LIBGCRYPT], [test x$USE_LIBGCRYPT = xyes])
+
 
 NEW_8580_FILTER=1
 AM_CONDITIONAL([NEW_8580_FILTER], [test $NEW_8580_FILTER != 0])

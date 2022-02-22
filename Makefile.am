@@ -212,9 +212,9 @@ src/sidplayfp/sidversion.h
 src_libsidplayfp_la_LIBADD = \
 src/builders/residfp-builder/libsidplayfp-residfp.la \
 src/builders/resid-builder/libsidplayfp-resid.la \
-$(GCRYPT_LIBS)
+$(LIBGCRYPT_LIBS)
 
-src_libsidplayfp_la_CPPFLAGS = $(GCRYPT_CFLAGS) $(AM_CPPFLAGS)
+src_libsidplayfp_la_CPPFLAGS = $(LIBGCRYPT_CFLAGS) $(AM_CPPFLAGS)
 
 if HARDSID
   src_libsidplayfp_la_LIBADD += src/builders/hardsid-builder/libsidplayfp-hardsid.la
@@ -241,6 +241,7 @@ src/builders/residfp-builder/residfp/Filter6581.cpp \
 src/builders/residfp-builder/residfp/Filter6581.h \
 src/builders/residfp-builder/residfp/Filter8580.cpp \
 src/builders/residfp-builder/residfp/Filter8580.h \
+src/builders/residfp-builder/residfp/FilterModelConfig.h \
 src/builders/residfp-builder/residfp/FilterModelConfig6581.cpp \
 src/builders/residfp-builder/residfp/FilterModelConfig6581.h \
 src/builders/residfp-builder/residfp/FilterModelConfig8580.cpp \
