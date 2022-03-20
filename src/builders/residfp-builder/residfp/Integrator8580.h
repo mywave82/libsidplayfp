@@ -23,7 +23,7 @@
 #ifndef INTEGRATOR8580_H
 #define INTEGRATOR8580_H
 
-#include "FilterModelConfig.h"
+#include "FilterModelConfig8580.h"
 
 #include <stdint.h>
 #include <cassert>
@@ -54,19 +54,16 @@ namespace reSIDfp
 class Integrator8580
 {
 private:
-    const unsigned short* opamp_rev;
-
     mutable int vx;
     mutable int vc;
 
     unsigned short nVgt;
     unsigned short n_dac;
 
-    const FilterModelConfig* fmc;
+    const FilterModelConfig8580* fmc;
 
 public:
-    Integrator8580(const FilterModelConfig* fmc) :
-        opamp_rev(fmc->getOpampRev()),
+    Integrator8580(const FilterModelConfig8580* fmc) :
         vx(0),
         vc(0),
         fmc(fmc)
@@ -97,7 +94,7 @@ public:
 
         // Vg - Vth, normalized so that translated values can be subtracted:
         // Vgt - x = (Vgt - t) - (x - t)
-        nVgt = fmc->getNormalizedValue(Vgt - fmc->getVmin());
+        nVgt = fmc->getNormalizedValue(Vgt);
     }
 
     int solve(int vi) const;
@@ -132,7 +129,7 @@ int Integrator8580::solve(int vi) const
     // vx = g(vc)
     const int tmp = (vc >> 15) + (1 << 15);
     assert(tmp < (1 << 16));
-    vx = opamp_rev[tmp];
+    vx = fmc->getOpampRev(tmp);
 
     // Return vo.
     return vx - (vc >> 14);

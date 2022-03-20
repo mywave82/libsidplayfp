@@ -26,6 +26,8 @@
 #include <algorithm>
 #include <cassert>
 
+#include "Spline.h"
+
 #include "sidcxx11.h"
 
 namespace reSIDfp
@@ -92,24 +94,9 @@ protected:
         double vdd,
         double vth,
         double ucox,
-        double ominv,
-        double omaxv
-    ) :
-        voice_voltage_range(vvr),
-        voice_DC_voltage(vdv), 
-        C(c),
-        Vdd(vdd),
-        Vth(vth),
-        Ut(26.0e-3),
-        uCox(ucox),
-        Vddt(Vdd - Vth),
-        vmin(ominv),
-        vmax(std::max(Vddt, omaxv)),
-        denorm(vmax - vmin),
-        norm(1.0 / denorm),
-        N16(norm * ((1 << 16) - 1)),
-        currFactorCoeff(denorm * (uCox / 2. * 1.0e-6 / C))
-    {}
+        const Spline::Point *opamp_voltage,
+        int opamp_size
+    );
 
     ~FilterModelConfig()
     {
@@ -145,23 +132,17 @@ public:
     /**
      * The "zero" output level of the voices.
      */
-    int getNormalizerdVoiceDC() const { return static_cast<int>(N16 * (voice_DC_voltage - vmin)); }
+    int getNormalizedVoiceDC() const { return static_cast<int>(N16 * (voice_DC_voltage - vmin)); }
 
-    inline const unsigned short* getOpampRev() const { return opamp_rev; }
+    inline unsigned short getOpampRev(int i) const { return opamp_rev[i]; }
     inline double getVddt() const { return Vddt; }
     inline double getVth() const { return Vth; }
-    inline double getUt() const { return Ut; }
-    inline double getVmin() const { return vmin; }
-    inline double getN16() const { return N16; }
-    inline double getuCox() const { return uCox; }
-    inline double getC() const { return C; }
-    inline double getdenorm() const { return denorm; }
     inline double getVoiceDCVoltage() const { return voice_DC_voltage; }
 
     // helper functions
     inline unsigned short getNormalizedValue(double value) const
     {
-        const double tmp = N16 * value;
+        const double tmp = N16 * (value - vmin);
         assert(tmp > -0.5 && tmp < 65535.5);
         return static_cast<unsigned short>(tmp + 0.5);
     }
@@ -169,6 +150,12 @@ public:
     inline unsigned short getNormalizedCurrentFactor(double wl) const
     {
         const double tmp = (1 << 13) * currFactorCoeff * wl;
+        assert(tmp > -0.5 && tmp < 65535.5);
+        return static_cast<unsigned short>(tmp + 0.5);
+    }
+
+    inline double getNVmin() const {
+        const double tmp = N16 * vmin;
         assert(tmp > -0.5 && tmp < 65535.5);
         return static_cast<unsigned short>(tmp + 0.5);
     }
