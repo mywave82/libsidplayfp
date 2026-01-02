@@ -39,17 +39,39 @@ int SID::clock(unsigned int cycles, short* buf)
     int i = 0;
     while (cycles > 0)
     {
-        short output;
-        if (generateSample(cycles, output))
+        if (generateSample(cycles, buf + i))
         {
-            buf[i] = output;
-            i++;
+            i+=4;
         }
     }
-    return i;
+    return i>>2;
 }
 
-inline bool SID::generateSample(unsigned int &cycles, short &output)
+inline bool SID::generateSample(unsigned int &cycles, short* buf)
+{
+    // call this from custom buffer-filler
+    short s;
+    if (!emulateC64(cycles, s))
+    {
+	return false;
+    }
+    // saturation logic on overflow
+
+    buf[0] = static_cast<signed short>(s);
+
+    for (int i = 0; i < 3 ; i++)
+    {
+        int Output = wavgen.LastOutput[i];
+        if (Output > 32767)
+            Output = 32767;
+        else if (Output < -32768)
+            Output = -32768;
+        buf[i + 1] = static_cast<signed short>(Output);
+    }
+    return true;
+}
+
+inline bool SID::emulateC64(unsigned int &cycles, short &output)
 {
     // Cycle-based part of emulations:
 

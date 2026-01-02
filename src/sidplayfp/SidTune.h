@@ -138,7 +138,7 @@ public:  // ----------------------------------------------------------------
      * @param sourceBuffer the buffer that contains song data
      * @param bufferLen length of the buffer
      */
-    void read(const uint_least8_t* sourceBuffer, uint_least32_t bufferLen);
+    void read(const uint8_t* sourceBuffer, uint_least32_t bufferLen);
 
     /**
      * Select sub-song.

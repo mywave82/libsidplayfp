@@ -78,6 +78,8 @@ public:
     void enableOld6581caps(bool enable) { m_sid.enableOld6581caps(enable); }
 
     void combinedWaveforms(SidConfig::sid_cw_t cws);
+
+    void GetVolumes(uint8_t&, uint8_t&, uint8_t&) const override;
 };
 
 }

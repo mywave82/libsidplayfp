@@ -67,6 +67,8 @@ public:
     void model(SidConfig::sid_model_t model, bool digiboost) override;
 
     int getLevel() const;
+
+    void GetVolumes(uint8_t&, uint8_t&, uint8_t&) const override;
 };
 
 }
