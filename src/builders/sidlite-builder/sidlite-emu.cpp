@@ -81,7 +81,7 @@ void SIDLiteEmu::clock()
 {
     const event_clock_t cycles = eventScheduler->getTime(EVENT_CLOCK_PHI1) - m_accessClk;
     m_accessClk += cycles;
-    m_bufferpos += m_sid.clock(cycles, m_buffer+m_bufferpos);
+    m_bufferpos += m_sid.clock(cycles, m_buffer+(m_bufferpos<<2));
 }
 
 int SIDLiteEmu::getLevel() const
@@ -124,7 +124,7 @@ void SIDLiteEmu::sampling(float systemclock, float freq,
 
     // 20ms buffer
     const int buffersize = std::ceil((freq / 1000.f) * 20.f);
-    m_buffer = new short[buffersize];
+    m_buffer = new short[buffersize*4];
     m_status = true;
 }
 
@@ -150,6 +150,11 @@ void SIDLiteEmu::model(SidConfig::sid_model_t model, bool /*digiboost*/)
 
     m_sid.setChipModel(chip);
     m_status = true;
+}
+
+void SIDLiteEmu::GetVolumes(uint8_t &a, uint8_t &b, uint8_t &c) const
+{
+	m_sid.GetVolumes(a, b, c);
 }
 
 }

@@ -363,16 +363,17 @@ wg_output_t WavGen::clock(const ADSR *adsr)
         int swave = static_cast<int>(WavGenOut) - CRSID_WAVE_MID;
         if (UNLIKELY(FilterSwitchReso & (1 << Channel)))
         {
-            FilterInput += (swave * Envelope) / ENVELOPE_MAGNITUDE_DIV;
+            FilterInput += (LastOutput[Channel] = (swave * Envelope) / ENVELOPE_MAGNITUDE_DIV);
         }
         else if (LIKELY(Channel!=2 || !(VolumeBand & OFF3_BITVAL)))
         {
-            NonFiltered += (swave * Envelope) / ENVELOPE_MAGNITUDE_DIV;
+            NonFiltered += (LastOutput[Channel] = (swave * Envelope) / ENVELOPE_MAGNITUDE_DIV);
         }
+
+        envReg[Channel] = EnvOut; // Envelope
     }
     // update readable SID1-registers (some SID tunes might use 3rd channel ENV3/OSC3 value as control)
     oscReg = WavGenOut >> WAVE_OSC3_SHIFTS; // OSC3, ENV3 (some players rely on it, unfortunately even for timing)
-    envReg = EnvOut; // Envelope
 
     return std::make_pair(FilterInput, NonFiltered);
 }

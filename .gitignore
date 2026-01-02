@@ -27,8 +27,13 @@ siddefs*.h
 src/config.h
 src/sidplayfp/sidversion.h
 src/stamp-h1
+src/sidtune/sidplayer1.bin
+src/sidtune/sidplayer2.bin
+src/psiddrv.bin
 tests/*.exe
 tests/*.log
 tests/*.trs
 libsidplayfp-*.tar.gz
 *build/
+
+src/builders/sidlite-builder/sidlite/sl_defs.h

@@ -99,6 +99,8 @@ public:
         m_sid.setDCBRes(res);
 #endif
     }
+
+    void GetVolumes(uint8_t&, uint8_t&, uint8_t&) const override;
 };
 
 }

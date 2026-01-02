@@ -36,17 +36,28 @@
 namespace libsidplayfp
 {
 
-unsigned int SimpleMixer::doMix(short *buffer, unsigned int samples)
+unsigned int SimpleMixer::doMix(short *buffer, unsigned int samples, std::vector<int16_t*> *rawBuffer)
 {
     unsigned int j = 0;
+
+    if (rawBuffer)
+    {
+        for (size_t k=0; k<m_buffers.size(); k++)
+        {
+            int16_t *dst = (*rawBuffer)[k];
+            const short *src = m_buffers[k];
+
+            memcpy (dst, src, samples * 4 * sizeof (int16_t));
+       }
+    }
+
     for (unsigned int i=0; i<samples; i++)
     {
         for (size_t k=0; k<m_buffers.size(); k++)
         {
             const short *buf = m_buffers[k];
-            m_iSamples[k] = buf[i];
+            m_iSamples[k] = buf[i<<2]; /* every forth sample, the 3 samples we skip contains raw data for each internal channel inside the SID IC */
         }
-
         for (auto mix: m_mix)
         {
             const int_least32_t tmp = (this->*(mix))();
