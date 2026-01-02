@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef INTEGRATOR_H
-#define INTEGRATOR_H
+#ifndef INTEGRATORII_H
+#define INTEGRATORII_H
 
 namespace reSIDfpII
 {

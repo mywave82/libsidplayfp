@@ -101,6 +101,11 @@ void sidplayfp::filter(unsigned int sidNum, bool enable)
     sidplayer.filter(sidNum, enable);
 }
 
+bool sidplayfp::getSidStatus(unsigned int sidNum, uint8_t& gatestoggle, uint8_t& syncstoggle, uint8_t& teststoggle, uint8_t **registers)
+{
+    return sidplayer.getSidStatus(sidNum, gatestoggle, syncstoggle, teststoggle, registers);
+}
+
 void sidplayfp::debug(bool enable, FILE *out)
 {
     sidplayer.debug(enable, out);

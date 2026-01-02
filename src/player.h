@@ -56,9 +56,16 @@ class sidemu;
 
 class Player
 {
+public:
+    c64vic getVIC(void)
+    {
+        return m_c64.getVIC();
+    }
+
 private:
     /// Commodore 64 emulator
     c64 m_c64;
+    c64::model_t m_model;
 
     /// Emulator info
     SidTune *m_tune;
@@ -122,6 +129,7 @@ private:
     void sidParams(double cpuFreq, int frequency,
                     SidConfig::sampling_method_t sampling);
 
+
     inline void run(unsigned int events);
 
 public:
@@ -131,6 +139,10 @@ public:
     const SidConfig &config() const { return m_cfg; }
 
     const SidInfo &info() const { return m_info; }
+
+    c64::model_t getModel () const { return m_model; }
+
+    double getMainCpuSpeed () const { return m_c64.getMainCpuSpeed(); }
 
     bool config(const SidConfig &cfg, bool force=false);
 
@@ -150,6 +162,8 @@ public:
 
     const char *error() const { return m_errorString.c_str(); }
 
+    bool getSidStatus(unsigned int sidNum, uint8_t registers[32], uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c);
+
     void setKernal(const uint8_t* rom);
     void setBasic(const uint8_t* rom);
     void setChargen(const uint8_t* rom);
@@ -162,7 +176,7 @@ public:
 
     void initMixer(bool stereo);
 
-    unsigned int mix(short *buffer, unsigned int samples);
+    unsigned int mix(short *buffer, unsigned int samples, std::vector<int16_t*> *rawBuffers = nullptr);
 
     bool reset();
 };

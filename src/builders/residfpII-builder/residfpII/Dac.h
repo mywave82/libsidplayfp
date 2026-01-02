@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef DAC_H
-#define DAC_H
+#ifndef DACII_H
+#define DACII_H
 
 #include "siddefs-fpII.h"
 

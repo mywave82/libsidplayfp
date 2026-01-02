@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef SIDFP_H
-#define SIDFP_H
+#ifndef SIDFPII_H
+#define SIDFPII_H
 
 #include <memory>
 #include <cassert>
@@ -166,6 +166,12 @@ private:
     void ageBusValue(unsigned int n);
 
     /**
+     * storage for keeping the last raw values
+     */
+
+    int voice_lastvalue[3];
+
+    /**
      * Calculate the numebr of cycles according to current parameters
      * that it takes to reach sync.
      *
@@ -281,7 +287,7 @@ public:
      * @param buf audio output buffer
      * @return number of samples produced
      */
-    int clock(unsigned int cycles, short* buf);
+    int clock(unsigned int cycles, int16_t* buf);
 
     /**
      * Clock SID forward with no audio production.
@@ -322,6 +328,8 @@ public:
      * @param enable false to turn off filter emulation
      */
     void enableFilter(bool enable);
+
+    void volumes(float &a, float &b, float &c) const;
 };
 
 } // namespace reSIDfpII
@@ -354,7 +362,7 @@ void SID::ageBusValue(unsigned int n)
 }
 
 RESID_INLINE
-int SID::clock(unsigned int cycles, short* buf)
+int SID::clock(unsigned int cycles, int16_t* buf)
 {
     ageBusValue(cycles);
     int s = 0;
@@ -377,11 +385,14 @@ int SID::clock(unsigned int cycles, short* buf)
                 voice[1].envelope()->clock();
                 voice[2].envelope()->clock();
 
-                const float sidOutput = static_cast<float>(filter->clock(voice[0], voice[1], voice[2]));
+                const float sidOutput = static_cast<float>(filter->clock(voice[0], voice[1], voice[2], voice_lastvalue));
                 const float c64Output = externalFilter.clock(sidOutput);
                 if (unlikely(resampler->input(c64Output)))
                 {
                     buf[s++] = softClip(scaleFactor * resampler->output());
+                    buf[s++] = voice_lastvalue[0] - INT16_MAX;
+                    buf[s++] = voice_lastvalue[1] - INT16_MAX;
+                    buf[s++] = voice_lastvalue[2] - INT16_MAX;
                 }
             }
 
@@ -395,7 +406,15 @@ int SID::clock(unsigned int cycles, short* buf)
         }
     }
 
-    return s;
+    return s>>2;
+}
+
+RESID_INLINE
+void SID::volumes(float &a, float &b, float &c) const
+{
+    a = voice[0].volume();
+    b = voice[1].volume();
+    c = voice[2].volume();
 }
 
 } // namespace reSIDfpII

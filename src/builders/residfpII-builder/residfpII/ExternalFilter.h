@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef EXTERNALFILTER_H
-#define EXTERNALFILTER_H
+#ifndef EXTERNALFILTERII_H
+#define EXTERNALFILTERII_H
 
 #include "siddefs-fpII.h"
 

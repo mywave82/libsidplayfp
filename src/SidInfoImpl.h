@@ -62,6 +62,7 @@ public:
     };
 
     std::vector<SidTuneInfo::model_t> m_sidModels;
+    std::vector<unsigned int> m_sidAddresses;
 
     std::string m_speedString;
 
@@ -107,6 +108,10 @@ public:
     SidTuneInfo::model_t getSidModel(unsigned int i) const override
     {
         return i<m_sidModels.size() ? m_sidModels[i] : SidTuneInfo::model_t::SIDMODEL_UNKNOWN;
+    }
+    unsigned int getSidAddress (unsigned int i) const override
+    {
+        return i<m_sidAddresses.size() ? m_sidAddresses[i] : 0;
     }
 };
 

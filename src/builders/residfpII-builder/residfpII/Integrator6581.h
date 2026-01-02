@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef INTEGRATOR6581_H
-#define INTEGRATOR6581_H
+#ifndef INTEGRATOR6581II_H
+#define INTEGRATOR6581II_H
 
 #include "Integrator.h"
 #include "FilterModelConfig6581.h"

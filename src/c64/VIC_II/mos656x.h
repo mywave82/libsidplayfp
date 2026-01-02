@@ -89,12 +89,14 @@ private:
     /// System's event scheduler.
     EventScheduler &eventScheduler;
 
+public:
     /// Number of cycles per line.
     unsigned int cyclesPerLine;
 
     /// Number of raster lines.
     unsigned int maxRasters;
 
+private:
     /// Current visible line
     unsigned int lineCycle;
 

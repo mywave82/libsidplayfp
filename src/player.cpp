@@ -202,6 +202,18 @@ bool Player::load(SidTune *tune)
     return true;
 }
 
+bool Player::getSidStatus(unsigned int sidNum, uint8_t registers[32], uint8_t &volume_a, uint8_t &volume_b, uint8_t &volume_c)
+{
+    if (sidNum < m_chips.size())
+    {
+        sidemu *s = m_chips[sidNum];
+        s->getStatus((uint8_t *)registers);
+        s->GetVolumes(volume_a, volume_b, volume_c);
+        return true;
+    }
+    return false;
+}
+
 void Player::mute(unsigned int sidNum, unsigned int voice, bool enable)
 {
     if (sidemu *s = (sidNum < m_chips.size()) ? m_chips[sidNum] : nullptr)
@@ -221,9 +233,9 @@ void Player::initMixer(bool stereo)
     m_simpleMixer.reset(new SimpleMixer(stereo, bufs.get(), installedSIDs()));
 }
 
-unsigned int Player::mix(short *buffer, unsigned int samples)
+unsigned int Player::mix(short *buffer, unsigned int samples, std::vector<int16_t*> *rawBuffers)
 {
-    return m_simpleMixer->doMix(buffer, samples);
+    return m_simpleMixer->doMix(buffer, samples, rawBuffers);
 }
 
 void Player::buffers(short** buffers) const
@@ -340,8 +352,8 @@ bool Player::config(const SidConfig &cfg, bool force)
             sidCreate(cfg.sidEmulation, cfg.defaultSidModel, cfg.digiBoost, cfg.forceSidModel, addresses);
 
             // Determine c64 model
-            const c64::model_t model = c64model(cfg.defaultC64Model, cfg.forceC64Model);
-            m_c64.setModel(model);
+            m_model = c64model(cfg.defaultC64Model, cfg.forceC64Model);
+            m_c64.setModel(m_model);
 
             const c64::cia_model_t ciaModel = getCiaModel(cfg.ciaModel);
             m_c64.setCiaModel(ciaModel);
@@ -527,6 +539,7 @@ void Player::sidCreate(sidbuilder *builder, SidConfig::sid_model_t defaultModel,
     {
         m_chips.clear();
         m_info.m_sidModels.clear();
+        m_info.m_sidAddresses.clear();
         const SidTuneInfo* tuneInfo = m_tune->getInfo();
 
         // Setup base SID
@@ -541,6 +554,7 @@ void Player::sidCreate(sidbuilder *builder, SidConfig::sid_model_t defaultModel,
         m_c64.setBaseSid(s);
         m_chips.push_back(s);
         m_info.m_sidModels.push_back(getSidModel(userModel));
+        m_info.m_sidAddresses.push_back(0xd400);
 
         // Setup extra SIDs if needed
         if (extraSidAddresses.size() != 0)
@@ -566,6 +580,7 @@ void Player::sidCreate(sidbuilder *builder, SidConfig::sid_model_t defaultModel,
 
                 m_chips.push_back(s);
                 m_info.m_sidModels.push_back(getSidModel(userModel));
+                m_info.m_sidAddresses.push_back(extraSidAddresses[i]);
             }
         }
     }

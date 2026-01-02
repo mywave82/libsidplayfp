@@ -129,12 +129,12 @@ public:
     /**
      * Create a new mixer.
      */
-    SimpleMixer(bool stereo, short** buffers, int chips);
+    SimpleMixer(bool stereo, short** buffers, int chips); /* buffers must be 4 times the expected size for OCP */
 
     /**
      * Do the mixing.
      */
-    unsigned int doMix(short *buffer, unsigned int samples);
+    unsigned int doMix(short *buffer, unsigned int samples, std::vector<int16_t*> *rawBuffers = nullptr);
 };
 
 }

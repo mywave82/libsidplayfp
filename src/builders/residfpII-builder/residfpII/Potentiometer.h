@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef POTENTIOMETER_H
-#define POTENTIOMETER_H
+#ifndef POTENTIOMETERII_H
+#define POTENTIOMETERII_H
 
 namespace reSIDfpII
 {

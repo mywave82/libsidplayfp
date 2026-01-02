@@ -46,3 +46,4 @@ const char *SidInfo::chargenDesc() const { return getChargenDesc(); }
 
 unsigned int SidInfo::numberOfSIDs() const { return getNumberOfSIDs(); }
 SidTuneInfo::model_t SidInfo::sidModel(unsigned int i) const { return getSidModel(i); }
+unsigned int SidInfo::sidAddress (unsigned int i) const { return getSidAddress (i); }

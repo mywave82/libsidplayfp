@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef OPAMP_H
-#define OPAMP_H
+#ifndef OPAMPII_H
+#define OPAMPII_H
 
 #include <vector>
 

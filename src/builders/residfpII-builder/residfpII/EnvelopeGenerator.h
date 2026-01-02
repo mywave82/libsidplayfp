@@ -21,8 +21,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef ENVELOPEGENERATOR_H
-#define ENVELOPEGENERATOR_H
+#ifndef ENVELOPEGENERATORII_H
+#define ENVELOPEGENERATORII_H
 
 #include "siddefs-fpII.h"
 

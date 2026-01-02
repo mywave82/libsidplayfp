@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef WAVEFORMGENERATOR_H
-#define WAVEFORMGENERATOR_H
+#ifndef WAVEFORMGENERATORII_H
+#define WAVEFORMGENERATORII_H
 
 #include "siddefs-fpII.h"
 #include "array.h"

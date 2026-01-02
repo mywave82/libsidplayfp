@@ -102,7 +102,7 @@ void ReSIDfpII::clock()
 {
     const event_clock_t cycles = eventScheduler->getTime(EVENT_CLOCK_PHI1) - m_accessClk;
     m_accessClk += cycles;
-    m_bufferpos += m_sid.clock(cycles, m_buffer+m_bufferpos);
+    m_bufferpos += m_sid.clock(cycles, m_buffer+(m_bufferpos<<2));
 }
 
 void ReSIDfpII::filter(bool enable)
@@ -144,7 +144,7 @@ void ReSIDfpII::sampling(float systemclock, float freq,
 
     // 20ms buffer
     const int buffersize = std::ceil((freq / 1000.f) * 20.f);
-    m_buffer = new short[buffersize];
+    m_buffer = new short[buffersize*4];
     m_status = true;
 }
 
@@ -195,6 +195,23 @@ void ReSIDfpII::combinedWaveforms(SidConfig::sid_cw_t cws)
 
     m_sid.setCombinedWaveforms(combinedWaveforms);
     m_status = true;
+}
+
+void ReSIDfpII::GetVolumes(uint8_t &a, uint8_t &b, uint8_t &c) const
+{
+   float _a = 0.0f;
+   float _b = 0.0f;
+   float _c = 0.0f;
+
+   m_sid.volumes (_a, _b, _c);
+
+   _a *= 0x8000;
+   _b *= 0x8000;
+   _c *= 0x8000;
+
+   if (_a < 0.0) a = 0; else if (_a > 255.0) a = 255; else a = _a;
+   if (_b < 0.0) b = 0; else if (_b > 255.0) b = 255; else b = _b;
+   if (_c < 0.0) c = 0; else if (_c > 255.0) c = 255; else c = _c;
 }
 
 }

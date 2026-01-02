@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef FILTER8580_H
-#define FILTER8580_H
+#ifndef FILTER8580II_H
+#define FILTER8580II_H
 
 #include "Filter.h"
 #include "FilterModelConfig8580.h"

@@ -153,7 +153,7 @@ public:
      * @param v3 voice 3 in
      * @return filtered output, unsigned 16 bit
      */
-    unsigned short clock(Voice& v1, Voice& v2, Voice& v3);
+    unsigned short clock(Voice& v1, Voice& v2, Voice& v3, int *voice_lastvalue);
 
     /**
      * Enable filter.
@@ -211,12 +211,12 @@ namespace reSIDfp
 {
 
 RESID_INLINE
-unsigned short Filter::clock(Voice& voice1, Voice& voice2, Voice& voice3)
+unsigned short Filter::clock(Voice& voice1, Voice& voice2, Voice& voice3, int *voice_lastvalue)
 {
-    const int V1 = getNormalizedVoice(voice1);
-    const int V2 = getNormalizedVoice(voice2);
+    const int V1 = voice_lastvalue[0] = getNormalizedVoice(voice1);
+    const int V2 = voice_lastvalue[1] = getNormalizedVoice(voice2);
     // Voice 3 is silenced by voice3off if it is not routed through the filter.
-    const int V3 = (filt3 || !voice3off) ? getNormalizedVoice(voice3) : getSilentVoice(voice3);
+    const int V3 = voice_lastvalue[2] = (filt3 || !voice3off) ? getNormalizedVoice(voice3) : getSilentVoice(voice3);
 
     int Vsum = 0;
     int Vmix = 0;

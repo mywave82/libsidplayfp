@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef WAVEFORMCALCULATOR_h
-#define WAVEFORMCALCULATOR_h
+#ifndef WAVEFORMCALCULATORII_h
+#define WAVEFORMCALCULATORII_h
 
 #include "array.h"
 

@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef VOICE_H
-#define VOICE_H
+#ifndef VOICEII_H
+#define VOICEII_H
 
 #include "siddefs-fpII.h"
 #include "WaveformGenerator.h"
@@ -70,6 +70,12 @@ public:
         // DAC imperfections are emulated by using the digital output
         // as an index into a DAC lookup table.
         return wavDAC[wav] * envDAC[env];
+    }
+
+    RESID_INLINE
+    float volume(void) const
+    {
+        return envelopeGenerator.output();
     }
 
     /**
