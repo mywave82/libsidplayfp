@@ -23,9 +23,7 @@
 #ifndef SIDPLAYFP_H
 #define SIDPLAYFP_H
 
-#include <cstdint>
-#include <cstdio>
-
+#include <vector>
 #include "sidplayfp/siddefs.h"
 #include "sidplayfp/sidversion.h"
 
@@ -174,6 +172,17 @@ public:
      * @since 2.10
      */
     void filter(unsigned int sidNum, bool enable);
+
+    /**
+     * Get the status of the given SID chip.
+     *
+     * @param sidNum the SID chip, 0 for the first one, 1 for the second.
+     * @param registers returns a pointer to an array 32 (only first 25 are
+     *             needed) entries long that gives the last known write-status
+     *             of the SID chip.
+     * @return true on sucess, false otherwise (invalid sidNum).
+     */
+    bool getSidStatus(unsigned int sidNum, uint8_t registers[32]);
 
     /**
      * Get the current playing time.
