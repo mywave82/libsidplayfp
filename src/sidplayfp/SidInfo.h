@@ -73,6 +73,7 @@ public:
     //@{
     unsigned int numberOfSIDs() const;
     SidTuneInfo::model_t sidModel(unsigned int i) const;
+    unsigned int sidAddress (unsigned int i) const;
     //@}
 
 private:
@@ -99,6 +100,7 @@ private:
 
     virtual unsigned int getNumberOfSIDs() const =0;
     virtual SidTuneInfo::model_t getSidModel(unsigned int i) const =0;
+    virtual unsigned int getSidAddress (unsigned int i) const =0;
 
 protected:
     ~SidInfo() {}

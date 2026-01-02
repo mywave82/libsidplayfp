@@ -65,6 +65,8 @@ public:
         SidConfig::sampling_method_t method) override;
 
     void model(SidConfig::sid_model_t model, bool digiboost) override;
+
+    void GetVolumes(uint8_t&, uint8_t&, uint8_t&) const override;
 };
 
 }

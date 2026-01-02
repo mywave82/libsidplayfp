@@ -72,6 +72,8 @@ public:
     void filter6581Range(double adjustment);
     void filter8580Curve(double filterCurve);
     void combinedWaveforms(SidConfig::sid_cw_t cws);
+
+    void GetVolumes(uint8_t&, uint8_t&, uint8_t&) const override;
 };
 
 }

@@ -41,7 +41,8 @@ public:
     wg_output_t clock(ADSR *adsr);
 
     inline unsigned char getOsc3() const { return oscReg; }
-    inline unsigned char getEnv3() const { return envReg; }
+    inline unsigned char getEnv(unsigned int Channel) const { return (Channel < 3) ? envReg[Channel] : 0; }
+    inline unsigned char getEnv3() const { return envReg[2]; }
 
 private:
     unsigned char *regs;
@@ -57,7 +58,9 @@ private:
     unsigned char SyncSourceMSBrise;
 
     unsigned char oscReg;
-    unsigned char envReg;
+    unsigned char envReg[3];
+public:
+    int           LastOutput[3] = {0};
 };
 
 }

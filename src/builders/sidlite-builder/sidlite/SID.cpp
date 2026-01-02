@@ -38,13 +38,13 @@ int SID::clock(unsigned int cycles, short* buf)
     int i = 0;
     while (cycles > 0)
     {
-        buf[i] = generateSample(cycles);
-        i++;
+        generateSample(cycles, buf + i);
+        i+=4;
     }
-    return i;
+    return i>>2;
 }
 
-inline signed short SID::generateSample(unsigned int &cycles)
+inline void SID::generateSample(unsigned int &cycles, short* buf)
 {
     // call this from custom buffer-filler
     int Output = emulateC64(cycles);
@@ -53,9 +53,18 @@ inline signed short SID::generateSample(unsigned int &cycles)
         Output = 32767;
     else if (Output < -32768)
         Output = -32768;
-    return static_cast<signed short>(Output);
-}
+    buf[0] = static_cast<signed short>(Output);
 
+    for (int i = 0; i < 3 ; i++)
+    {
+        Output = wavgen.LastOutput[i];
+        if (Output > 32767)
+            Output = 32767;
+        else if (Output < -32768)
+            Output = -32768;
+        buf[i + 1] = static_cast<signed short>(Output);
+    }
+}
 
 inline int SID::emulateC64(unsigned int &cycles)
 {

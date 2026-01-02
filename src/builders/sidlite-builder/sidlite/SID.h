@@ -23,6 +23,8 @@
 #ifndef SIDLITE_SID_H
 #define SIDLITE_SID_H
 
+#include <cstdint>
+
 #include "ADSR.h"
 #include "Filter.h"
 #include "WavGen.h"
@@ -48,6 +50,8 @@ public:
 
     int getLevel() const { return filter.getLevel(); }
 
+    void GetVolumes(uint8_t &a, uint8_t &b, uint8_t &c) const { a = wavgen.getEnv(0); b = wavgen.getEnv(1); c = wavgen.getEnv(2); }
+
 private:
     unsigned char regs[0x20] = {0};
 
@@ -59,7 +63,7 @@ private:
     short             SampleCycleCnt;
 
 private:
-    inline signed short generateSample(unsigned int &cycles);
+    inline void generateSample(unsigned int &cycles, short* buf);
     inline int emulateC64(unsigned int &cycles);
 };
 
